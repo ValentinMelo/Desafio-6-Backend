@@ -1,38 +1,43 @@
 import express from 'express';
+import passport from 'passport';
 import User from '../models/user.js';
 
 const router = express.Router();
 
 router.get('/login', (req, res) => {
-  res.render('login');
+  res.render('login', { message: req.flash('error') });
 });
 
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
-
-  if (!user || user.password !== password) {
-    return res.status(401).send('Credenciales incorrectas');
-  }
-
-  req.session.user = user;
-  res.redirect('/');
-});
+router.post(
+  '/login',
+  passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/auth/login',
+    failureFlash: true,
+  })
+);
 
 router.get('/register', (req, res) => {
-  res.render('register');
+  res.render('register', { message: req.flash('error') });
 });
 
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = new User({ username, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, password: hashedPassword });
     await user.save();
-    req.session.user = user;
-    res.redirect('/');
+    req.login(user, (err) => {
+      if (err) {
+        console.error(`Error al iniciar sesión: ${err}`);
+        return res.status(500).send('Error al iniciar sesión');
+      }
+      res.redirect('/');
+    });
   } catch (error) {
-    res.status(500).send('Error al registrar usuario');
+    req.flash('error', 'Error al registrar usuario');
+    res.redirect('/auth/register');
   }
 });
 

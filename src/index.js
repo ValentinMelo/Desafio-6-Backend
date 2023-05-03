@@ -8,6 +8,10 @@ import connectToDatabase from './database.js';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import authRoutes from './routes/authRoutes.js';
+import passport from 'passport';
+import configurePassport from './passport.js';
+
+configurePassport(passport);
 
 const app = express();
 const port = 8080;
