@@ -41,4 +41,15 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.get('/github', passport.authenticate('github'));
+
+router.get(
+  '/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/');
+  }
+);
+
+
 export default router;
